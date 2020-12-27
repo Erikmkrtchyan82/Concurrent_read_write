@@ -14,7 +14,7 @@ using namespace std::literals::chrono_literals;
 
 void print_letter() {
 	
-    int count = 0;
+    size_t count = 0;
     std::vector<char> syms;
 
 	// finding max number of occurrences
@@ -43,9 +43,6 @@ void print_letter() {
 }
 
 int main( int argc, char *argv[] ) {
-
-    using thread = std::thread;
-
 	
     try {
         if ( argc < 2 ) {
@@ -53,23 +50,23 @@ int main( int argc, char *argv[] ) {
                 "Usage: " + std::string( argv[ 0 ] ) + " <input-file-path>..." );
         }
 
-        std::vector<thread> readers;
+        std::vector<std::thread> readers;
 
-        std::this_thread::sleep_for( 20s );
-
+        std::atomic<bool> error_occured = false;
+    	
         for ( int i = 1; i < argc; ++i ) {
-            readers.emplace_back( reader::read, argv[ i ] );
+            readers.emplace_back( reader::read, argv[ i ],std::ref(error_occured) );
         }
 
         std::atomic<bool> finished = false;
 
-        thread counter( counter::count,  finished );
+        std::thread counter( counter::count,  std::ref(finished ), std::ref( error_occured ) );
 
-        thread write( writer::write, "output.txt" );
+        std::thread write( writer::write, "output.txt", std::ref( error_occured ) );
 
-        std::this_thread::sleep_for( 30ms );
-
-
+        if ( !error_occured )
+            std::this_thread::sleep_for( 30ms );
+    	
         for ( auto &t : readers )
             t.join();
 
@@ -79,6 +76,9 @@ int main( int argc, char *argv[] ) {
 
         write.join();
 
+        if ( error_occured )
+            throw global_vars::exception_message;
+    	
         if ( global_vars::symbols.empty() )
             std::cout << "No letters" << std::endl;
         else

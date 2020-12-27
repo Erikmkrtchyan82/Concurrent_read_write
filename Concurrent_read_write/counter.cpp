@@ -7,9 +7,13 @@
 
 namespace counter{
 
-void count(std::atomic<bool>& finished) {
+void count(std::atomic<bool>& finished, std::atomic<bool> &error_occured ) {
 	
     while ( true ) {
+
+        if ( error_occured )
+            break;
+    	
         std::vector< std::string > local_rows;
 
         {

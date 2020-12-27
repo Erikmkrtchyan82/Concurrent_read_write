@@ -5,7 +5,7 @@
 
 namespace counter {
 
-void count( std::atomic<bool> &finished );
+void count( std::atomic<bool> &finished, std::atomic<bool> &error_occured );
 
 } // namespace counter
 

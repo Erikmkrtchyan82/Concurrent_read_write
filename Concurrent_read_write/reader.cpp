@@ -10,13 +10,18 @@
 
 namespace reader {
 
-void read( std::string path) {
+void read( std::string path, std::atomic<bool>& error_occured ) {
 
     std::ifstream input( path );
 
-	if ( !input )
-        throw exceptions::read_error( "Failed to open " + path + " for reading" );
-
+    if ( !input ) {
+        if ( !error_occured ) {
+            global_vars::exception_message = exceptions::read_error( "Failed to open " + path + " for reading" );
+            error_occured = true;
+        }
+        return;
+    }
+	
 	std::string row;
 
     while ( std::getline( input, row, '\n' ) ) {

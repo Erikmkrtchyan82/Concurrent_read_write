@@ -9,13 +9,18 @@
 
 namespace writer {
 
-void write( std::string path) {
+void write( std::string path, std::atomic<bool>& error_occured ) {
 
     std::ofstream output( path );
 
-    if ( !output )
-        throw exceptions::read_error( "Failed to open " + path + " for writing" );
-	
+    if ( !output ) {
+        if ( !error_occured ) {
+            global_vars::exception_message = exceptions::read_error( "Failed to open " + path + " for writing" );
+            error_occured = true;
+        }
+        return;
+    }
+    	
     while ( true ) {
         std::vector< std::string > local_rows;
 
